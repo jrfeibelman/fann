@@ -3,7 +3,8 @@ from sys import stdout
 from inspect import stack
 from datetime import datetime
 from pytz import reference, timezone
-from os import getcwd, getpid
+from os import getcwd, getpid, makedirs
+from os.path import exists
 
 class Formatter(Formatter):
     timezone_mappings = {
@@ -48,13 +49,26 @@ class Logger:
             cls.logger = getLogger()
             cls.formatter = Formatter('%(asctime)s [%(levelname)s] %(message)s', datefmt=("%Y%m%d %H:%M:%S.%f"))
             
+            file = config.get_value('OutputFile', '%s/stockalyzer.log' % getcwd())
+            data_file = config.get_value('DataFile', 'NONE')
+
+            path = "/".join(file.split('/')[:-1])
+            print("Path: %s" % path)
+            if not exists(path):
+                print("Create Path %s" % path)
+                makedirs(path)
+
+            data_path = "/".join(data_file.split('/')[:-1])
+            print("Path: %s" % data_path)
+            if not exists(data_path):
+                print("Create Path %s" % data_path)
+                makedirs(data_path)
+
             if to_stdout:
                 cls.handler = StreamHandler(stdout)
             else:
-                file = config.get_value('OutputFile', '%s/stockalyzer.log' % getcwd())
-                data_file = config.get_value('DataFile', 'NONE')
                 cls.handler = FileHandler(file, mode='a')
-                
+
             cls.level = get_log_level(config.get_value('Level', 'INFO'))
             cls.logger.setLevel(cls.level)
             cls.handler.setLevel(cls.level)
